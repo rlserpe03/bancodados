@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL para Escolas - Cadastro de Alunos</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#06b6d4',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        },
+                        codebg: '#0f172a'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Highlight.js Syntax Highlighting (Tokyo Night theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+
+    <style>
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .hljs {
+            background: #0f172a !important;
+            border-radius: 0 0 0.75rem 0.75rem;
+            padding: 1.25rem !important;
+            font-size: 0.925rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Top Bar / Header -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                        <i class="fa-solid fa-database text-slate-950 text-lg font-bold"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
+                            SQL Academy <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-normal">Material de Aula</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Banco de Dados Escolar: Tabela de Alunos</p>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="copyAllScript()" class="hidden md:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-3.5 py-2 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
+                    <i class="fa-solid fa-copy text-cyan-400"></i>
+                    <span>Copiar Script Completo</span>
+                </button>
+            </div>
+
+            <!-- Tab Navigation Links -->
+            <nav class="flex space-x-1 sm:space-x-4 overflow-x-auto border-t border-slate-800/60 py-2 no-scrollbar" id="tab-nav">
+                <button onclick="switchTab('tab-ddl')" id="btn-tab-ddl" class="tab-btn active px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-all bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>1. Criar Tabela (DDL)</span>
+                </button>
+                <button onclick="switchTab('tab-dml')" id="btn-tab-dml" class="tab-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>2. Inserir Alunos (DML)</span>
+                </button>
+                <button onclick="switchTab('tab-dql')" id="btn-tab-dql" class="tab-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>3. Consultas (SELECT)</span>
+                </button>
+                <button onclick="switchTab('tab-preview')" id="btn-tab-preview" class="tab-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                    <i class="fa-solid fa-table"></i>
+                    <span>4. Visualizar Tabela</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Banner Info -->
+        <div class="mb-8 p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200">Guia de Estudos para os Alunos</h2>
+                    <p class="text-xs text-slate-400">Copie os blocos de código abaixo para testar no MySQL Workbench, DBeaver, pgAdmin ou SQLite.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Compatível com: <strong>MySQL, PostgreSQL, SQL Server</strong></span>
+            </div>
+        </div>
+
+        <!-- TAB 1: CREATE TABLE -->
+        <section id="tab-ddl" class="tab-content space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">DDL - Data Definition Language</span>
+                        <span class="text-xs text-slate-400">Passo 1 de 3</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mt-1">Criação da Tabela <code class="text-cyan-400">alunos</code></h2>
+                </div>
+                <p class="text-xs text-slate-400 max-w-md">Define a estrutura lógica do banco de dados com chave primária, chaves únicas e tipos de dados adequados.</p>
+            </div>
+
+            <!-- Code Box -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl">
+                <!-- Code Header -->
+                <div class="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+                        <span class="ml-2 text-xs font-mono text-slate-400">01_create_table_alunos.sql</span>
+                    </div>
+                    <button onclick="copySnippet('code-ddl', this)" class="copy-btn flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium border border-slate-700 transition-all">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copiar Código</span>
+                    </button>
+                </div>
+                <!-- Code Block -->
+                <pre><code id="code-ddl" class="language-sql">CREATE TABLE alunos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ra VARCHAR(20) NOT NULL UNIQUE,
+    nome VARCHAR(100) NOT NULL,
+    cpf CHAR(11) NOT NULL UNIQUE,
+    rg VARCHAR(20),
+    cep CHAR(8) NOT NULL,
+    endereco VARCHAR(150) NOT NULL,
+    numero VARCHAR(10),
+    complemento VARCHAR(50),
+    bairro VARCHAR(50),
+    cidade VARCHAR(50) NOT NULL,
+    estado CHAR(2) NOT NULL,
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+            </div>
+
+            <!-- Explanations & Didactic Tips -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                    <h3 class="text-sm font-semibold text-cyan-400 flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb"></i> Explicação dos Tipos de Dados
+                    </h3>
+                    <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                        <li><strong class="text-white">AUTO_INCREMENT / PRIMARY KEY:</strong> Gera uma chave primária numérica única automaticamente.</li>
+                        <li><strong class="text-white">CHAR(11) / CHAR(8):</strong> Usado quando o número de caracteres é fixo (como CPF sem pontuação ou CEP).</li>
+                        <li><strong class="text-white">VARCHAR(X):</strong> Alocação dinâmica de espaço para textos de tamanho variável (nome, endereço).</li>
+                        <li><strong class="text-white">UNIQUE:</strong> Garante que não existirão dois alunos com o mesmo RA ou CPF.</li>
+                    </ul>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                    <h3 class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info"></i> Dica do Professor
+                    </h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Note que guardamos apenas números limpos em campos como <strong>CPF</strong> (11 dígitos) e <strong>CEP</strong> (8 dígitos). Evitar traços e pontos no banco economiza espaço de armazenamento e facilita validações na aplicação backend.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: INSERT INTO -->
+        <section id="tab-dml" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">DML - Data Manipulation Language</span>
+                        <span class="text-xs text-slate-400">Passo 2 de 3</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mt-1">Inserção de Alunos (<code class="text-emerald-400">INSERT INTO</code>)</h2>
+                </div>
+                <p class="text-xs text-slate-400 max-w-md">Adiciona 5 registros completos com dados de alunos de diferentes estados do Brasil.</p>
+            </div>
+
+            <!-- Code Box -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl">
+                <!-- Code Header -->
+                <div class="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+                        <span class="ml-2 text-xs font-mono text-slate-400">02_insert_alunos.sql</span>
+                    </div>
+                    <button onclick="copySnippet('code-dml', this)" class="copy-btn flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium border border-slate-700 transition-all">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copiar Código</span>
+                    </button>
+                </div>
+                <!-- Code Block -->
+                <pre><code id="code-dml" class="language-sql">INSERT INTO alunos (
+    ra, nome, cpf, rg, cep, endereco, numero, complemento, bairro, cidade, estado
+) VALUES 
+(
+    '20260001', 'Lucas Silva Santos', '12345678901', '123456789', 
+    '80010000', 'Rua XV de Novembro', '100', 'Apto 12', 'Centro', 'Curitiba', 'PR'
+),
+(
+    '20260002', 'Mariana Oliveira Costa', '23456789012', '234567890', 
+    '01001000', 'Praça da Sé', '50', NULL, 'Sé', 'São Paulo', 'SP'
+),
+(
+    '20260003', 'Gabriel Pereira Lima', '34567890123', '345678901', 
+    '20040002', 'Avenida Rio Branco', '1500', 'Bloco B', 'Centro', 'Rio de Janeiro', 'RJ'
+),
+(
+    '20260004', 'Beatriz Souza Rodrigues', '45678901234', '456789012', 
+    '30130010', 'Avenida Afonso Pena', '250', NULL, 'Centro', 'Belo Horizonte', 'MG'
+),
+(
+    '20260005', 'Matheus Fernandes Alves', '56789012345', '567890123', 
+    '90010001', 'Rua dos Andradas', '820', 'Apto 502', 'Centro Histórico', 'Porto Alegre', 'RS'
+);</code></pre>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5"></i>
+                <div class="text-xs text-slate-300 space-y-1">
+                    <strong class="text-white block font-semibold">Atenção para valores nulos (NULL):</strong>
+                    <p>Quando um aluno não possui complemento de endereço (por exemplo, casa em vez de apartamento), utilizamos o valor <code>NULL</code> sem aspas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: SELECT QUERIES -->
+        <section id="tab-dql" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">DQL - Data Query Language</span>
+                        <span class="text-xs text-slate-400">Passo 3 de 3</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mt-1">Consultas e Filtros (<code class="text-indigo-400">SELECT</code>)</h2>
+                </div>
+                <p class="text-xs text-slate-400 max-w-md">Exemplos práticos de seleção de dados para relatórios e buscas específicas.</p>
+            </div>
+
+            <!-- Query Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Query 1 -->
+                <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-200">1. Listar TODOS os dados cadastrados</span>
+                            <button onclick="copySnippet('code-select-1', this)" class="copy-btn text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 border border-slate-700">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <pre><code id="code-select-1" class="language-sql">SELECT * FROM alunos;</code></pre>
+                    </div>
+                    <div class="p-3 bg-slate-950/60 border-t border-slate-800/80 text-xs text-slate-400">
+                        📌 <strong>Uso:</strong> Retorna todas as colunas e todos os registros salvos na tabela.
+                    </div>
+                </div>
+
+                <!-- Query 2 -->
+                <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-200">2. Selecionar apenas colunas específicas</span>
+                            <button onclick="copySnippet('code-select-2', this)" class="copy-btn text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 border border-slate-700">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <pre><code id="code-select-2" class="language-sql">SELECT ra, nome, cidade, estado 
+FROM alunos;</code></pre>
+                    </div>
+                    <div class="p-3 bg-slate-950/60 border-t border-slate-800/80 text-xs text-slate-400">
+                        📌 <strong>Uso:</strong> Otimiza a consulta trazendo apenas a listagem simplificada de localização.
+                    </div>
+                </div>
+
+                <!-- Query 3 -->
+                <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-200">3. Buscar aluno específico pelo RA</span>
+                            <button onclick="copySnippet('code-select-3', this)" class="copy-btn text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 border border-slate-700">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <pre><code id="code-select-3" class="language-sql">SELECT * FROM alunos 
+WHERE ra = '20260001';</code></pre>
+                    </div>
+                    <div class="p-3 bg-slate-950/60 border-t border-slate-800/80 text-xs text-slate-400">
+                        📌 <strong>Uso:</strong> Filtra exatamente o registro correspondente à matrícula do aluno.
+                    </div>
+                </div>
+
+                <!-- Query 4 -->
+                <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-200">4. Filtrar alunos por Estado (UF)</span>
+                            <button onclick="copySnippet('code-select-4', this)" class="copy-btn text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 border border-slate-700">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <pre><code id="code-select-4" class="language-sql">SELECT nome, cpf, cidade 
+FROM alunos 
+WHERE estado = 'SP';</code></pre>
+                    </div>
+                    <div class="p-3 bg-slate-950/60 border-t border-slate-800/80 text-xs text-slate-400">
+                        📌 <strong>Uso:</strong> Retorna dados apenas dos alunos que moram no Estado de São Paulo.
+                    </div>
+                </div>
+
+                <!-- Query 5 -->
+                <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden flex flex-col justify-between lg:col-span-2">
+                    <div>
+                        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-200">5. Busca por aproximação de Nome (Operador LIKE)</span>
+                            <button onclick="copySnippet('code-select-5', this)" class="copy-btn text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 border border-slate-700">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <pre><code id="code-select-5" class="language-sql">-- Alunos cujo nome começa com a letra 'M'
+SELECT ra, nome, cidade FROM alunos WHERE nome LIKE 'M%';
+
+-- Alunos que possuem 'Silva' em qualquer parte do nome
+SELECT ra, nome FROM alunos WHERE nome LIKE '%Silva%';</code></pre>
+                    </div>
+                    <div class="p-3 bg-slate-950/60 border-t border-slate-800/80 text-xs text-slate-400">
+                        📌 <strong>Uso:</strong> O caractere coringa <code>%</code> representa qualquer sequência de texto.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 4: INTERACTIVE DATA TABLE PREVIEW -->
+        <section id="tab-preview" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20">Simulação de Resultado</span>
+                        <span class="text-xs text-slate-400">Resultado da Tabela</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mt-1">Como a tabela fica preenchida</h2>
+                </div>
+                <p class="text-xs text-slate-400 max-w-md">Visualização gráfica do banco de dados após a execução do <code>CREATE TABLE</code> e <code>INSERT INTO</code>.</p>
+            </div>
+
+            <!-- Table Container -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900 overflow-x-auto shadow-2xl">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-200 border-b border-slate-800 uppercase font-mono text-[11px]">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold text-cyan-400">ID</th>
+                            <th class="px-4 py-3 font-semibold text-cyan-400">RA</th>
+                            <th class="px-4 py-3 font-semibold">Nome</th>
+                            <th class="px-4 py-3 font-semibold">CPF</th>
+                            <th class="px-4 py-3 font-semibold">RG</th>
+                            <th class="px-4 py-3 font-semibold">CEP</th>
+                            <th class="px-4 py-3 font-semibold">Endereço</th>
+                            <th class="px-4 py-3 font-semibold">Nº</th>
+                            <th class="px-4 py-3 font-semibold">Compl.</th>
+                            <th class="px-4 py-3 font-semibold">Bairro</th>
+                            <th class="px-4 py-3 font-semibold">Cidade</th>
+                            <th class="px-4 py-3 font-semibold text-emerald-400">UF</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3 text-slate-500">1</td>
+                            <td class="px-4 py-3 text-cyan-400">20260001</td>
+                            <td class="px-4 py-3 font-sans font-medium text-white">Lucas Silva Santos</td>
+                            <td class="px-4 py-3">12345678901</td>
+                            <td class="px-4 py-3">123456789</td>
+                            <td class="px-4 py-3">80010000</td>
+                            <td class="px-4 py-3 font-sans">Rua XV de Novembro</td>
+                            <td class="px-4 py-3">100</td>
+                            <td class="px-4 py-3 text-slate-400">Apto 12</td>
+                            <td class="px-4 py-3 font-sans">Centro</td>
+                            <td class="px-4 py-3 font-sans">Curitiba</td>
+                            <td class="px-4 py-3 text-emerald-400">PR</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3 text-slate-500">2</td>
+                            <td class="px-4 py-3 text-cyan-400">20260002</td>
+                            <td class="px-4 py-3 font-sans font-medium text-white">Mariana Oliveira Costa</td>
+                            <td class="px-4 py-3">23456789012</td>
+                            <td class="px-4 py-3">234567890</td>
+                            <td class="px-4 py-3">01001000</td>
+                            <td class="px-4 py-3 font-sans">Praça da Sé</td>
+                            <td class="px-4 py-3">50</td>
+                            <td class="px-4 py-3 text-slate-600 font-sans italic">NULL</td>
+                            <td class="px-4 py-3 font-sans">Sé</td>
+                            <td class="px-4 py-3 font-sans">São Paulo</td>
+                            <td class="px-4 py-3 text-emerald-400">SP</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3 text-slate-500">3</td>
+                            <td class="px-4 py-3 text-cyan-400">20260003</td>
+                            <td class="px-4 py-3 font-sans font-medium text-white">Gabriel Pereira Lima</td>
+                            <td class="px-4 py-3">34567890123</td>
+                            <td class="px-4 py-3">345678901</td>
+                            <td class="px-4 py-3">20040002</td>
+                            <td class="px-4 py-3 font-sans">Avenida Rio Branco</td>
+                            <td class="px-4 py-3">1500</td>
+                            <td class="px-4 py-3 text-slate-400">Bloco B</td>
+                            <td class="px-4 py-3 font-sans">Centro</td>
+                            <td class="px-4 py-3 font-sans">Rio de Janeiro</td>
+                            <td class="px-4 py-3 text-emerald-400">RJ</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3 text-slate-500">4</td>
+                            <td class="px-4 py-3 text-cyan-400">20260004</td>
+                            <td class="px-4 py-3 font-sans font-medium text-white">Beatriz Souza Rodrigues</td>
+                            <td class="px-4 py-3">45678901234</td>
+                            <td class="px-4 py-3">456789012</td>
+                            <td class="px-4 py-3">30130010</td>
+                            <td class="px-4 py-3 font-sans">Avenida Afonso Pena</td>
+                            <td class="px-4 py-3">250</td>
+                            <td class="px-4 py-3 text-slate-600 font-sans italic">NULL</td>
+                            <td class="px-4 py-3 font-sans">Centro</td>
+                            <td class="px-4 py-3 font-sans">Belo Horizonte</td>
+                            <td class="px-4 py-3 text-emerald-400">MG</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3 text-slate-500">5</td>
+                            <td class="px-4 py-3 text-cyan-400">20260005</td>
+                            <td class="px-4 py-3 font-sans font-medium text-white">Matheus Fernandes Alves</td>
+                            <td class="px-4 py-3">56789012345</td>
+                            <td class="px-4 py-3">567890123</td>
+                            <td class="px-4 py-3">90010001</td>
+                            <td class="px-4 py-3 font-sans">Rua dos Andradas</td>
+                            <td class="px-4 py-3">820</td>
+                            <td class="px-4 py-3 text-slate-400">Apto 502</td>
+                            <td class="px-4 py-3 font-sans">Centro Histórico</td>
+                            <td class="px-4 py-3 font-sans">Porto Alegre</td>
+                            <td class="px-4 py-3 text-emerald-400">RS</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>Desenvolvido para auxílio didático nas aulas de Banco de Dados.</p>
+            <p class="text-slate-400 font-mono">Dica: Use <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">Ctrl + C</kbd> ou os botões de cópia rápida.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Highlight.js
+        document.addEventListener('DOMContentLoaded', (event) => {
+            hljs.highlightAll();
+        });
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Deactivate all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50';
+            });
+
+            // Show selected tab content
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) {
+                activeContent.classList.remove('hidden');
+            }
+
+            // Highlight selected tab button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.className = 'tab-btn active px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-2 whitespace-nowrap transition-all bg-cyan-500/10 text-cyan-400 border border-cyan-500/30';
+            }
+        }
+
+        // Copy Single Snippet Logic using legacy fallback for iFrame compatibility
+        function copySnippet(elementId, btnElement) {
+            const codeElement = document.getElementById(elementId);
+            if (!codeElement) return;
+
+            const textToCopy = codeElement.innerText.trim();
+
+            // Create temporary textarea for copying (guarantees compatibility)
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyFeedback(btnElement);
+                }
+            } catch (err) {
+                console.error('Erro ao copiar código:', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // Visual Feedback Function
+        function showCopyFeedback(btnElement) {
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> <span class="text-emerald-400">Copiado! ✔️</span>';
+            btnElement.classList.add('border-emerald-500/50', 'bg-emerald-500/10');
+
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.classList.remove('border-emerald-500/50', 'bg-emerald-500/10');
+            }, 2000);
+        }
+
+        // Copy All Scripts Combined
+        function copyAllScript() {
+            const ddl = document.getElementById('code-ddl')?.innerText.trim() || '';
+            const dml = document.getElementById('code-dml')?.innerText.trim() || '';
+            const select = document.getElementById('code-select-1')?.innerText.trim() || '';
+
+            const fullScript = `-- =============================================\n` +
+                               `-- SCRIPT COMPLETO: CADASTRO DE ALUNOS\n` +
+                               `-- =============================================\n\n` +
+                               `-- 1. CRIAÇÃO DA TABELA\n${ddl}\n\n` +
+                               `-- 2. INSERÇÃO DOS DADOS\n${dml}\n\n` +
+                               `-- 3. CONSULTA\n${select}\n`;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = fullScript;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                
+                // Temporary toast notification
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-5 right-5 bg-emerald-500 text-slate-950 px-4 py-3 rounded-xl shadow-2xl font-bold text-xs flex items-center gap-2 z-50 animate-bounce';
+                toast.innerHTML = '<i class="fa-solid fa-circle-check text-base"></i> Script completo copiado para a área de transferência!';
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+
+            } catch (err) {
+                console.error('Erro ao copiar script completo:', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+    </script>
+</body>
+</html>
